@@ -1,0 +1,23 @@
+# https://golangci-lint.run/usage/configuration/
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  # These are in addition to the default linters
+  enable:
+    - gocritic
+    - gofmt
+
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - hugeParam
+      - paramTypeCombine
+      - unnamedResult
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - opinionated
