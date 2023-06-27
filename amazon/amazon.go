@@ -42,18 +42,22 @@ func (c *ecrDeletionHandler) ScanAndDeleteRepos(olderThan *time.Time) []error {
 	if c.registryId != "" {
 		input.RegistryId = &c.registryId
 	}
-	repos, err := c.client.DescribeRepositories(context.TODO(), &input)
-	if err != nil {
-		log.Println("ERROR:", err)
-		errs = append(errs, err)
-		return errs
-	}
 
-	for _, repo := range repos.Repositories {
-		err := c.ScanAndDeleteImages(*repo.RepositoryName, olderThan)
+	paginator := ecr.NewDescribeRepositoriesPaginator(c.client, &input)
+	for paginator.HasMorePages() {
+		repos, err := paginator.NextPage(context.TODO())
 		if err != nil {
 			log.Println("ERROR:", err)
 			errs = append(errs, err)
+			return errs
+		}
+
+		for _, repo := range repos.Repositories {
+			err := c.ScanAndDeleteImages(*repo.RepositoryName, olderThan)
+			if err != nil {
+				log.Println("ERROR:", err)
+				errs = append(errs, err)
+			}
 		}
 	}
 
@@ -68,26 +72,29 @@ func (c *ecrDeletionHandler) ScanAndDeleteImages(repoName string, olderThan *tim
 	if c.registryId != "" {
 		input.RegistryId = &c.registryId
 	}
-	images, err := c.client.DescribeImages(context.TODO(), &input)
-	if err != nil {
-		log.Println("ERROR:", err)
-		return err
-	}
-
 	tagsToDelete := []string{}
 	digestsToDelete := []string{}
 
-	for _, image := range images.ImageDetails {
-		lastUse := image.LastRecordedPullTime
-		if lastUse == nil {
-			log.Printf("WARN: Image %s [%v] has never been pulled, using last push\n", repoName, image.ImageTags)
-			lastUse = image.ImagePushedAt
+	paginator := ecr.NewDescribeImagesPaginator(c.client, &input)
+	for paginator.HasMorePages() {
+		images, err := paginator.NextPage(context.TODO())
+		if err != nil {
+			log.Println("ERROR:", err)
+			return err
 		}
-		if lastUse.Before(*olderThan) {
-			tagsToDelete = append(tagsToDelete, image.ImageTags...)
-			digestsToDelete = append(digestsToDelete, *image.ImageDigest)
-		} else {
-			empty = false
+
+		for _, image := range images.ImageDetails {
+			lastUse := image.LastRecordedPullTime
+			if lastUse == nil {
+				log.Printf("WARN: Image %s [%v] has never been pulled, using last push\n", repoName, image.ImageTags)
+				lastUse = image.ImagePushedAt
+			}
+			if lastUse.Before(*olderThan) {
+				tagsToDelete = append(tagsToDelete, image.ImageTags...)
+				digestsToDelete = append(digestsToDelete, *image.ImageDigest)
+			} else {
+				empty = false
+			}
 		}
 	}
 

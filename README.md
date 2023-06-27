@@ -11,10 +11,6 @@ https://github.com/aws/containers-roadmap/issues/921
 
 If it's added in the future this utility will not be needed.
 
-## TODOs
-
-- pagination for listing repositories and images
-
 ## Build and run locally
 
 You must install [Go 1.20](https://tip.golang.org/doc/go1.20).
