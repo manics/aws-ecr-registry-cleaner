@@ -19,6 +19,6 @@ COPY --from=build /src/aws-ecr-registry-cleaner /bin/
 RUN adduser -S -D -H -h /app appuser
 USER appuser
 
-CMD [ "aws-ecr-registry-cleaner" ]
+ENTRYPOINT [ "aws-ecr-registry-cleaner" ]
 
 EXPOSE 8080

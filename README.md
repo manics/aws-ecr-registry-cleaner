@@ -14,7 +14,6 @@ If it's added in the future this utility will not be needed.
 ## TODOs
 
 - pagination for listing repositories and images
-- continually rerun with a delay
 
 ## Build and run locally
 
@@ -33,21 +32,44 @@ make test
 
 Run with Amazon Web Services using the local [AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html):
 
+Delete images that haven't been pulled for at least 7 days, then exit:
+
+```
+aws-ecr-registry-cleaner -expires-after-pull-days=7
+```
+
+Delete all images
+
+```
+aws-ecr-registry-cleaner -expires-after-pull-days=0
+```
+
+Delete images that haven't been pulled for at least 7 days, then re-run after one hour:
+
+```
+aws-ecr-registry-cleaner -expires-after-pull-days=7 -loop-delay=3600
+```
+
+For for help run
+
+```
+aws-ecr-registry-cleaner -help
+```
+
 ## Build and run container
 
 ```
 podman build -t aws-ecr-registry-cleaner .
 ```
 
-Amazon Web Services:
+Delete images that haven't been pulled for at least 7 days:
 
 ```
 podman run --rm -it \
   -eAWS_REGION=region \
   -eAWS_ACCESS_KEY_ID=access-key \
   -eAWS_SECRET_ACCESS_KEY=secret-key \
-  -eAWS_ECR_EXPIRES_AFTER_PULL_DAYS=7 \
-  aws-ecr-registry-cleaner
+  aws-ecr-registry-cleaner -expires-after-pull-days=7
 ```
 
 ## Running in the cloud
@@ -55,13 +77,6 @@ podman run --rm -it \
 The recommended way to run this service is to use an IAM
 [instance profile (AWS)](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html)
 to authenticate with the cloud provider.
-
-### Environment variables
-
-The following environment variables are supported:
-
-- `AWS_ECR_EXPIRES_AFTER_PULL_DAYS`: Delete images which haven't been pulled for at least this number of days, default `7`.
-- `AWS_REGISTRY_ID`: Registry ID to use for AWS ECR, only set this is you are not using the default registry for the AWS account.
 
 ## Development
 

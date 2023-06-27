@@ -6,10 +6,7 @@ package amazon
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,8 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
-
-const DEFAULT_EXPIRES_AFTER_PULL_DAYS int = 7
 
 type IEcrClient interface {
 	DescribeRepositories(ctx context.Context, input *ecr.DescribeRepositoriesInput, optFns ...func(*ecr.Options)) (response *ecr.DescribeRepositoriesOutput, err error)
@@ -190,21 +185,6 @@ func (c *ecrDeletionHandler) DeleteRepository(repoName string) error {
 	return nil
 }
 
-func envvarIntGreaterThanZero(envvar string, defaultValue int) (int, error) {
-	s := os.Getenv(envvar)
-	if s == "" {
-		return defaultValue, nil
-	}
-	i, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, fmt.Errorf("ERROR: Invalid %s: %v", envvar, err)
-	}
-	if i < 0 {
-		return 0, fmt.Errorf("%s must be >= 0, got %d", envvar, i)
-	}
-	return i, nil
-}
-
 func (c *ecrDeletionHandler) RunOnce() []error {
 	olderThan := time.Now().Add(-time.Duration(c.expiresAfterPullDays) * 24 * time.Hour)
 	log.Printf("Deleting images older than %s\n", olderThan.Format(time.RFC3339))
@@ -212,19 +192,7 @@ func (c *ecrDeletionHandler) RunOnce() []error {
 	return errs
 }
 
-func Setup(args []string) (*ecrDeletionHandler, error) {
-	dryRun := false
-	if len(args) > 1 {
-		return nil, errors.New("Usage: aws-ecr-registry-cleaner [--dry-run]")
-	}
-	if len(args) == 1 {
-		if args[0] == "--dry-run" {
-			dryRun = true
-		} else {
-			return nil, errors.New("Usage: aws-ecr-registry-cleaner [--dry-run]")
-		}
-	}
-
+func Setup(dryRun bool, registryId string, expiresAfterPullDays int) (*ecrDeletionHandler, error) {
 	// Automatically looks for a usable configuration
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -242,13 +210,7 @@ func Setup(args []string) (*ecrDeletionHandler, error) {
 
 	ecrClient := ecr.NewFromConfig(cfg)
 
-	registryId := os.Getenv("AWS_REGISTRY_ID")
 	log.Println("Registry ID:", registryId)
-
-	expiresAfterPullDays, err := envvarIntGreaterThanZero("AWS_ECR_EXPIRES_AFTER_PULL_DAYS", DEFAULT_EXPIRES_AFTER_PULL_DAYS)
-	if err != nil {
-		return nil, err
-	}
 
 	ecrH := &ecrDeletionHandler{
 		registryId:           registryId,
