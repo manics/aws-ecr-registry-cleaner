@@ -53,6 +53,7 @@ func main() {
 			}
 		}
 		if loopEnabled {
+			log.Printf("Sleeping for %d seconds", *loopDelayFlag)
 			time.Sleep(time.Duration(*loopDelayFlag) * time.Second)
 		} else {
 			break
