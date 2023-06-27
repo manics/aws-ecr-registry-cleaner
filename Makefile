@@ -10,7 +10,7 @@ build:
 	go build $(GOFLAGS) -o aws-ecr-registry-cleaner ./cmd
 
 test: build
-	go test ./...
+	go test -v ./...
 
 clean:
 	rm -f aws-ecr-registry-cleaner
