@@ -31,9 +31,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v5
         with:
-          # Workaround problem with golangci-lint-action trying to overwrite cache
-          # https://github.com/golangci/golangci-lint-action/issues/135
-          skip-pkg-cache: true
           version: v1.53.3
 
   build:
