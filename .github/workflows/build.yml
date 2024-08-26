@@ -22,11 +22,11 @@ jobs:
         with:
           python-version: "3.10"
 
-      - uses: pre-commit/action@v3.0.1
-
       - uses: actions/setup-go@v5
         with:
           go-version-file: ./go.mod
+
+      - uses: pre-commit/action@v3.0.1
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
