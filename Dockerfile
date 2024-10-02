@@ -12,7 +12,7 @@ ARG TARGETOS TARGETARCH
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH make build
 
 ###########################################################################
-FROM docker.io/library/alpine:3.17
+FROM docker.io/library/alpine:3.20
 
 COPY --from=build /src/aws-ecr-registry-cleaner /bin/
 
