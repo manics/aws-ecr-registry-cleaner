@@ -1,7 +1,7 @@
 # https://www.docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide/
 
 ###########################################################################
-FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.20-alpine AS build
+FROM --platform=$BUILDPLATFORM docker.io/library/golang:1.21-alpine AS build
 
 RUN apk add --no-cache make git
 
